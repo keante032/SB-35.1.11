@@ -2,20 +2,17 @@
 
 const { Client } = require("pg");
 
-// let DB_URI;
-
-// if (process.env.NODE_ENV === "test") {
-//     DB_URI = "postgresql:///biztime_test";
-// } else {
-//     DB_URI = "postgresql:///biztime";
-// }
-
-const DB_URI = "postgresql:///biztime";
+// does NODE_ENV equal "test"? if so, use biztime_test; if not, use biztime
+const DB_URI = (process.env.NODE_ENV === "test") ? "postgresql:///biztime_test" : "postgresql:///biztime";
 
 let db = new Client({
     connectionString: DB_URI
 });
 
-db.connect();
+async function db_connect() {
+    await db.connect();
+}
+
+db_connect();
 
 module.exports = db;

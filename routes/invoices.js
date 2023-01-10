@@ -1,20 +1,20 @@
 /** Routes for invoices of BizTime. */
 
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const db = require("../db");
-const ExpressError = require("../expressError");
+const db = require('../db');
+const ExpressError = require('../expressError');
 
 /* get list of all invoices */
-router.get("/", async function (req, res, next) {
+router.get('/', async function (req, res, next) {
     try {
         const results = await db.query(`SELECT id, comp_code FROM invoices`);
-        return res.json({ "invoices": results.rows });
+        return res.json({ invoices: results.rows });
     } catch (err) { return next(err); }
 });
 
 /* get one invoice */
-router.get("/:id", async function (req, res, next) {
+router.get('/:id', async function (req, res, next) {
     try {
         const { id } = req.params;
         const result = await db.query(
@@ -22,7 +22,7 @@ router.get("/:id", async function (req, res, next) {
              FROM invoices AS i
              INNER JOIN companies AS c
              ON i.comp_code = c.code
-             WHERE invoices.id = $1`,
+             WHERE i.id = $1`,
             [id]
         );
         if (result.rows.length === 0) {
@@ -41,24 +41,24 @@ router.get("/:id", async function (req, res, next) {
                     description: data.description
                 }
             }
-            return res.json({ "invoice": invoice });
+            return res.json({ invoice: invoice });
         }
     } catch (err) { return next(err); }
 });
 
 /* add an invoice */
-router.post("/", async function (req, res, next) {
+router.post('/', async function (req, res, next) {
     try {
         const { comp_code, amt } = req.body;
 
         const result = await db.query(`INSERT INTO invoices (comp_code, amt) VALUES ($1, $2) RETURNING id, comp_code, amt, paid, add_date, paid_date`, [comp_code, amt]);
 
-        return res.status(201).json({ "invoice": result.rows[0] });
+        return res.status(201).json({ invoice: result.rows[0] });
     } catch (err) { return next(err); }
 });
 
 /* edit an invoice */
-router.put("/:id", async function (req, res, next) {
+router.put('/:id', async function (req, res, next) {
     try {
         const { amt } = req.body;
         const { id } = req.params;
@@ -66,20 +66,21 @@ router.put("/:id", async function (req, res, next) {
         if (result.rows.length === 0) {
             throw new ExpressError(`No such invoice: ${id}`, 404);
         } else {
-            return res.json({ "invoice": result.rows[0] });
+            return res.json({ invoice: result.rows[0] });
         }
     } catch (err) { return next(err); }
 });
 
 /* delete an invoice */
-router.delete("/:id", async function (req, res, next) {
+router.delete('/:id', async function (req, res, next) {
     try {
         const { id } = req.params;
+        const checkExists = await db.query(`SELECT id, amt, add_date FROM invoices WHERE id = $1`, [id]);
         const result = await db.query(`DELETE FROM invoices WHERE id = $1`, [id]);
-        if (result.rows.length === 0) {
+        if (checkExists.rows.length === 0) {
             throw new ExpressError(`No such invoice: ${id}`, 404);
         } else {
-            return res.json({ "status": "deleted" });
+            return res.json({ status: 'deleted' });
         }
     } catch (err) { return next(err); }
 });
